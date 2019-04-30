@@ -1,0 +1,8 @@
+{
+  "name" : "Donation Tracker",
+  "exportId" : "H00DJDwGQAK6Y6KNjMwf-w",
+  "icon" : "☀️",
+  "requiredAWSConfigs" : [ ],
+  "requiredOAuthApiConfigs" : [ ],
+  "requiredSimpleTokenApis" : [ ]
+}
