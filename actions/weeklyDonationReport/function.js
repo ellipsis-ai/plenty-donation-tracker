@@ -25,23 +25,30 @@ client.authorize().then(() => {
     const date = rowToDate(ea);
     return date && date.isValid();
   });
-  const firstRow = rowsWithData[0];
-  const lastRow = rowsWithData[rowsWithData.length - 1];
-  ellipsis.success(`
+  if (!rowsWithData.length) {
+    ellipsis.error("No valid data found in the spreadsheet", {
+      userMessage: "I was unable to find any valid data in the donation tracker data source."
+    });
+  } else {
+    const firstRow = rowsWithData[0];
+    const lastRow = rowsWithData[rowsWithData.length - 1];
+    const date = rowToDate(lastRow).format("MMMM D, YYYY")
+    ellipsis.success(`
 ${greeting}
 
-Here is the donation report for the week of ${rowToDate(lastRow).format("MMMM D, YYYY")}.
+Here is the donation report for the week of ${date}.
 
-This week's totals:
-Seedlings donated: ${lastRow[SEEDLING_TOTAL_INDEX]}
-Produce donated: ${lastRow[PRODUCE_TOTAL_INDEX]} lb
+_This week’s totals:_
+Seedlings donated: **${lastRow[SEEDLING_TOTAL_INDEX] || "(unknown)"}**
+Produce donated: **${lastRow[PRODUCE_TOTAL_INDEX] || "(unknown)"} lb**
 
-All-time total donated so far:
-Total trays: ${firstRow[TOTAL_TRAYS_INDEX]}
-Total seedlings: ${firstRow[TOTAL_SEEDLINGS_INDEX]}
-Total produce: ${firstRow[TOTAL_PRODUCE_INDEX]} lb
+_All-time total donated so far:_
+Total trays: **${firstRow[TOTAL_TRAYS_INDEX] || "(unknown)"}**
+Total seedlings: **${firstRow[TOTAL_SEEDLINGS_INDEX] || "(unknown)"}**
+Total produce: **${firstRow[TOTAL_PRODUCE_INDEX] || "(unknown)"} lb**
 `
-  );
+    );
+  }
 });
 
 function rowToDate(row) {

@@ -1,4 +1,10 @@
 [ {
+  "text" : "donation tracker",
+  "requiresMention" : true,
+  "isRegex" : false,
+  "caseSensitive" : false,
+  "triggerType" : "MessageSent"
+}, {
   "text" : "donation tracker weekly report",
   "requiresMention" : true,
   "isRegex" : false,

@@ -1,0 +1,7 @@
+[ {
+  "text" : "setup donation tracker",
+  "requiresMention" : true,
+  "isRegex" : false,
+  "caseSensitive" : false,
+  "triggerType" : "MessageSent"
+} ]

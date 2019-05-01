@@ -1,1 +1,21 @@
-[ ]
+[ {
+  "exportId" : "UANpcDd7SPy3ArzPH8ldOg",
+  "name" : "channel",
+  "paramType" : {
+    "exportId" : "Text",
+    "name" : "Text"
+  },
+  "question" : "What channel should I run the donation tracker in?",
+  "isSavedForTeam" : false,
+  "isSavedForUser" : false
+}, {
+  "exportId" : "tpViNHseQM6bJKtZfxyCrQ",
+  "name" : "recurrence",
+  "paramType" : {
+    "exportId" : "Text",
+    "name" : "Text"
+  },
+  "question" : "When should I run the donation tracker (e.g. \"every Monday at 9 AM\")?",
+  "isSavedForTeam" : false,
+  "isSavedForUser" : false
+} ]
