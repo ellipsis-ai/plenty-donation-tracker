@@ -9,6 +9,16 @@
   "isSavedForTeam" : false,
   "isSavedForUser" : false
 }, {
+  "exportId" : "Wn0uR3EoQuqFN_DxpC8c9w",
+  "name" : "chartDataJson",
+  "paramType" : {
+    "exportId" : "Text",
+    "name" : "Text"
+  },
+  "question" : "What is the value for `chartDataJson`?",
+  "isSavedForTeam" : false,
+  "isSavedForUser" : false
+}, {
   "exportId" : "tpViNHseQM6bJKtZfxyCrQ",
   "name" : "recurrence",
   "paramType" : {
