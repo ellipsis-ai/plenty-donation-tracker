@@ -13,7 +13,6 @@ const PRODUCE_TOTAL_INDEX = 4;
 const TOTAL_TRAYS_INDEX = 5;
 const TOTAL_SEEDLINGS_INDEX = 6;
 const TOTAL_PRODUCE_INDEX = 8;
-let resultText = "";
 
 client.authorize().then(() => {
   return sheets.spreadsheets.values.get({
@@ -40,9 +39,12 @@ client.authorize().then(() => {
     const chartData = getChartData(dates, produceData, seedlingData);
     const chartUrl = encodeURI(`https://quickchart.io/chart?c=${JSON.stringify(chartData)}&backgroundColor=white&width=500&height=300`);
     return ellipsis.uploadFromUrl(chartUrl, {
-      filename: `donation-tracking-chart-${now.format("YYYY-MM-DD")}`
+      filename: `donation-tracking-chart-${now.format("YYYY-MM-DD")}.png`
+    }).catch((err) => {
+      console.log(err);
+      return Promise.resolve(null);
     }).then((uploadedUrl) => {
-      ellipsis.success(`
+      let resultText = `
 ${greeting}
 
 Here is the donation report for the week of ${date}.
@@ -56,8 +58,13 @@ Total trays: **${firstRow[TOTAL_TRAYS_INDEX] || "(unknown)"}**
 Total seedlings: **${firstRow[TOTAL_SEEDLINGS_INDEX] || "(unknown)"}**
 Total produce: **${firstRow[TOTAL_PRODUCE_INDEX] || "(unknown)"} lb**
 
-[Donation tracker as of ${today}](${uploadedUrl})
-`);
+`;
+      if (uploadedUrl) {
+        resultText += `[Donation tracker as of ${today}](${uploadedUrl})`;
+      } else {
+        resultText += `(An error occurred while trying to create the chart.)`;
+      }
+      ellipsis.success(resultText);
     });
   }
 });
