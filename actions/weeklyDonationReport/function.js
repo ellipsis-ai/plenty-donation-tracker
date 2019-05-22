@@ -8,11 +8,11 @@ const {client, sheets} = require('ellipsis_google_sheets_api')(ellipsis);
 const SPREADSHEET_ID = "1xXGQThvw7fHtqzlagWh0JMXPH43emYeeYrCDXKK1TqM";
 const TAB_NAME = "Bot";
 const DATE_COLUMN_INDEX = 0;
-const SEEDLING_TOTAL_INDEX = 2;
-const PRODUCE_TOTAL_INDEX = 4;
-const TOTAL_TRAYS_INDEX = 5;
-const TOTAL_SEEDLINGS_INDEX = 6;
-const TOTAL_PRODUCE_INDEX = 8;
+const SEEDLING_TOTAL_INDEX = 5;
+const PRODUCE_TOTAL_INDEX = 3;
+const TOTAL_TRAYS_INDEX = 6;
+const TOTAL_SEEDLINGS_INDEX = 7;
+const TOTAL_PRODUCE_INDEX = 9;
 
 client.authorize().then(() => {
   return sheets.spreadsheets.values.get({
