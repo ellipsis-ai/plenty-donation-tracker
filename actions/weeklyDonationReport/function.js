@@ -3,24 +3,20 @@ function(ellipsis) {
 const moment = require('moment-timezone');
 const now = moment.tz(ellipsis.team.timeZone);
 const today = now.format("M/D/YYYY");
-const {client, sheets} = require('ellipsis_google_sheets_api')(ellipsis);
-
+const Sheet = ellipsis.require('ellipsis-gsheets@^0.0.1').Sheet;
 const SPREADSHEET_ID = "1xXGQThvw7fHtqzlagWh0JMXPH43emYeeYrCDXKK1TqM";
 const TAB_NAME = "Bot";
 const DATE_COLUMN_INDEX = 0;
-const SEEDLING_TOTAL_INDEX = 5;
+const PRODUCTION_DONATIONS_INDEX = 1;
+const NON_PRODUCTION_DONATIONS_INDEX = 2;
 const PRODUCE_TOTAL_INDEX = 3;
+const SEEDLING_TOTAL_INDEX = 5;
 const TOTAL_TRAYS_INDEX = 6;
 const TOTAL_SEEDLINGS_INDEX = 7;
 const TOTAL_PRODUCE_INDEX = 9;
 
-client.authorize().then(() => {
-  return sheets.spreadsheets.values.get({
-    spreadsheetId: SPREADSHEET_ID,
-    range: TAB_NAME
-  });
-}).then((result) => {
-  const rows = result.data.values;
+const doc = new Sheet(ellipsis, SPREADSHEET_ID);
+doc.get(TAB_NAME).then((rows) => {
   const rowsWithData = rows.filter((ea) => {
     const date = rowToDate(ea);
     return date && date.isValid();
@@ -31,19 +27,27 @@ client.authorize().then(() => {
     });
   } else {
     const firstRow = rowsWithData[0];
-    const lastRow = rowsWithData[rowsWithData.length - 1];
+    const lastRowIndex = rowsWithData.length - 1;
+    const lastRow = rowsWithData[lastRowIndex];
     const date = rowToDate(lastRow).format("MMMM D, YYYY");
     const dates = rowsWithData.map((row) => row[DATE_COLUMN_INDEX]);
-    const produceData = rowsWithData.map((row) => Number.parseFloat(row[PRODUCE_TOTAL_INDEX]));
-    const seedlingData = rowsWithData.map((row) => Number.parseFloat(row[SEEDLING_TOTAL_INDEX]));
-    const chartData = getChartData(dates, produceData, seedlingData);
-    const chartUrl = encodeURI(`https://quickchart.io/chart?c=${JSON.stringify(chartData)}&backgroundColor=white&width=500&height=300`);
+    const productionDonations = rowsWithData.map((row) => Number.parseFloat(row[PRODUCTION_DONATIONS_INDEX] || "0"));
+    const nonProductionDonations = rowsWithData.map((row) => Number.parseFloat(row[NON_PRODUCTION_DONATIONS_INDEX] || "0"));
+    const produceData = rowsWithData.map((row) => Number.parseFloat(row[PRODUCE_TOTAL_INDEX] || "0"));
+    const seedlingData = rowsWithData.map((row) => Number.parseFloat(row[SEEDLING_TOTAL_INDEX] || "0"));
+    const chartData = getChartData(dates, productionDonations, nonProductionDonations);
+    const chartUrl = `https://quickchart.io/chart?backgroundColor=white&width=500&height=300&c=${encodeURIComponent(JSON.stringify(chartData))}`;
     return ellipsis.uploadFromUrl(chartUrl, {
-      filename: `donation-tracking-chart-${now.format("YYYY-MM-DD")}.png`
+      filename: `donation-tracking-chart-${now.format("YYYY-MM-DD-HHmmss")}.png`
     }).catch((err) => {
       console.log(err);
       return Promise.resolve(null);
     }).then((uploadedUrl) => {
+      const thisWeekProductionDonations = productionDonations[lastRowIndex];
+      const thisWeekNonProductionDonations = nonProductionDonations[lastRowIndex];
+      const totalDonations = thisWeekNonProductionDonations + thisWeekNonProductionDonations;
+      const productionPctg = thisWeekProductionDonations === 0 ? 0 : thisWeekProductionDonations / totalDonations * 100;
+      const nonProductionPctg = thisWeekNonProductionDonations === 0 ? 0 : nonProductionDonations / totalDonations * 100;
       let resultText = `
 ${greeting}
 
@@ -52,6 +56,7 @@ Here is the donation report for the week of ${date}.
 _This week’s totals:_
 Seedlings donated: **${lastRow[SEEDLING_TOTAL_INDEX] || "(unknown)"}**
 Produce donated: **${lastRow[PRODUCE_TOTAL_INDEX] || "(unknown)"} lb**
+${Math.round(productionPctg)}% production / ${Math.round(nonProductionPctg)}% non-production
 
 _All-time total donated so far:_
 Total trays: **${firstRow[TOTAL_TRAYS_INDEX] || "(unknown)"}**
@@ -74,27 +79,21 @@ function rowToDate(row) {
   return date;
 }
 
-function getChartData(dates, produceData, seedlingData) {
+function getChartData(dates, productionDonations, nonProductionDonations) {
   return {
     type: 'bar',
     data: {
       labels: dates,
       datasets: [{
-        type: 'line',
-        lineTension: 0.2,
-        fill: false,
-        label: 'Produce',
-        borderWidth: 2,
-        data: produceData,
-        borderColor: 'hsl(231, 50%, 58%)',
-        backgroundColor: 'hsl(231, 50%, 58%)',
-        yAxisID: 'produce'
+        label: 'Production',
+        data: productionDonations,
+        borderColor: 'hsl(103, 38%, 75%)',
+        backgroundColor: 'hsl(103, 38%, 75%)',
       }, {
-        label: 'Seedlings', 
-        data: seedlingData,
-        borderColor: 'hsl(127, 75%, 48%)',
-        backgroundColor: 'hsl(127, 75%, 48%)',
-        yAxisID: 'seedlings'
+        label: 'Non-Production', 
+        data: nonProductionDonations,
+        borderColor: 'hsl(255, 37%, 62%)',
+        backgroundColor: 'hsl(255, 37%, 62%)',
       }]
     },
     options: {
@@ -103,21 +102,16 @@ function getChartData(dates, produceData, seedlingData) {
         text: "Donations all-time"
       },
       scales: {
+        xAxes: [{
+          stacked: true
+        }],
         yAxes: [{
-          id: 'seedlings',
-          type: 'linear',
-          position: 'right',
-          scaleLabel: {
-            display: true,
-            labelString: 'Number of Seedlings'
-          }
-        }, {
-          id: 'produce',
           type: 'linear',
           position: 'left',
+          stacked: true,
           scaleLabel: {
             display: true,
-            labelString: "lb of Produce"
+            labelString: "lb of Donations"
           }
         }]
       }
