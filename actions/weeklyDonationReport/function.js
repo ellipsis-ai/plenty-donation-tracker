@@ -31,10 +31,10 @@ doc.get(TAB_NAME).then((rows) => {
     const lastRow = rowsWithData[lastRowIndex];
     const date = rowToDate(lastRow).format("MMMM D, YYYY");
     const dates = rowsWithData.map((row) => row[DATE_COLUMN_INDEX]);
-    const productionDonations = rowsWithData.map((row) => Number.parseFloat(row[PRODUCTION_DONATIONS_INDEX] || "0"));
-    const nonProductionDonations = rowsWithData.map((row) => Number.parseFloat(row[NON_PRODUCTION_DONATIONS_INDEX] || "0"));
-    const produceData = rowsWithData.map((row) => Number.parseFloat(row[PRODUCE_TOTAL_INDEX] || "0"));
-    const seedlingData = rowsWithData.map((row) => Number.parseFloat(row[SEEDLING_TOTAL_INDEX] || "0"));
+    const productionDonations = rowsWithData.map((row) => strToFloat(row[PRODUCTION_DONATIONS_INDEX]));
+    const nonProductionDonations = rowsWithData.map((row) => strToFloat(row[NON_PRODUCTION_DONATIONS_INDEX]));
+    const produceData = rowsWithData.map((row) => strToFloat(row[PRODUCE_TOTAL_INDEX]));
+    const seedlingData = rowsWithData.map((row) => strToFloat(row[SEEDLING_TOTAL_INDEX]));
     const chartData = getChartData(dates, productionDonations, nonProductionDonations);
     const chartUrl = `https://quickchart.io/chart?backgroundColor=white&width=500&height=300&c=${encodeURIComponent(JSON.stringify(chartData))}`;
     return ellipsis.uploadFromUrl(chartUrl, {
@@ -45,9 +45,9 @@ doc.get(TAB_NAME).then((rows) => {
     }).then((uploadedUrl) => {
       const thisWeekProductionDonations = productionDonations[lastRowIndex];
       const thisWeekNonProductionDonations = nonProductionDonations[lastRowIndex];
-      const totalDonations = thisWeekNonProductionDonations + thisWeekNonProductionDonations;
+      const totalDonations = thisWeekProductionDonations + thisWeekNonProductionDonations;
       const productionPctg = thisWeekProductionDonations === 0 ? 0 : thisWeekProductionDonations / totalDonations * 100;
-      const nonProductionPctg = thisWeekNonProductionDonations === 0 ? 0 : nonProductionDonations / totalDonations * 100;
+      const nonProductionPctg = thisWeekNonProductionDonations === 0 ? 0 : thisWeekNonProductionDonations / totalDonations * 100;
       let resultText = `
 ${greeting}
 
@@ -117,5 +117,10 @@ function getChartData(dates, productionDonations, nonProductionDonations) {
       }
     }
   };
+}
+
+function strToFloat(cell) {
+  const asFloat = cell ? Number.parseFloat(cell) : 0;
+  return Number.isNaN(asFloat) ? 0 : asFloat;
 }
 }
